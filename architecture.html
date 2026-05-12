@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Cheapens Talk — Architecture</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #fff;
+    color: #1e293b;
+    padding: 48px 56px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  header {
+    border-bottom: 2px solid #1e293b;
+    padding-bottom: 16px;
+    margin-bottom: 36px;
+  }
+  header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  header p  { color: #64748b; margin-top: 4px; font-size: 12px; }
+
+  /* ── Tree ── */
+  ul.tree, ul.tree ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  ul.tree ul { padding-left: 24px; }
+
+  ul.tree li {
+    position: relative;
+    padding: 3px 0 3px 20px;
+  }
+
+  /* vertical line down from parent */
+  ul.tree ul > li::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: #cbd5e1;
+  }
+  /* horizontal tick to node */
+  ul.tree ul > li::after {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 11px;
+    width: 14px;
+    height: 1px;
+    background: #cbd5e1;
+  }
+  /* cut the vertical line after the last child */
+  ul.tree ul > li:last-child::before {
+    height: 11px;
+  }
+
+  .node {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .label {
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .desc {
+    color: #64748b;
+    font-size: 11.5px;
+    font-weight: 400;
+  }
+
+  /* colour coding */
+  .root   .label { font-size: 15px; font-weight: 700; }
+  .dir    .label { color: #1e293b; }
+  .jsx    .label { color: #4f46e5; }   /* indigo  */
+  .js     .label { color: #0891b2; }   /* cyan    */
+  .json   .label { color: #059669; }   /* emerald */
+  .mjs    .label { color: #7c3aed; }   /* violet  */
+  .sql    .label { color: #b45309; }   /* amber   */
+  .env    .label { color: #dc2626; }   /* red     */
+  .config .label { color: #475569; }   /* slate   */
+
+  /* leaf annotations */
+  .leaf {
+    display: block;
+    margin-top: 2px;
+    padding-left: 4px;
+    border-left: 2px solid #e2e8f0;
+    color: #94a3b8;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  /* legend */
+  .legend {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .legend-item { display: flex; align-items: center; gap-6: 6px; font-size: 11.5px; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* data flow section */
+  .flows {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+  }
+  .flows h2 { font-size: 13px; font-weight: 700; margin-bottom: 12px; color: #1e293b; }
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .flow-from { font-weight: 600; color: #4f46e5; }
+  .flow-arrow { color: #94a3b8; }
+  .flow-to   { font-weight: 600; color: #059669; }
+  .flow-desc { color: #64748b; }
+
+  @media print {
+    body { padding: 32px 40px; }
+    @page { margin: 16mm; size: A4; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Does AI Cheapen Talk? — File Architecture</h1>
+  <p>Signaling game · React + Vite + Supabase · Generated 2026-05-08</p>
+</header>
+
+<ul class="tree">
+
+  <li><span class="node root"><span class="label">ai-cheapens-talk/</span></span>
+    <ul>
+
+      <!-- src/ -->
+      <li><span class="node dir"><span class="label">src/</span></span>
+        <ul>
+
+          <li><span class="node jsx"><span class="label">App.jsx</span><span class="desc">Game state machine &amp; all screen components</span></span>
+            <ul>
+              <li><span class="node jsx"><span class="label">LoginScreen</span></span>
+                <span class="leaf">Username + shared password gate before game starts</span></li>
+              <li><span class="node jsx"><span class="label">RoleSelectScreen</span></span>
+                <span class="leaf">Two-step: choose role (Evaluator / Applicant) then field</span></li>
+              <li><span class="node jsx"><span class="label">AiOptionsScreen</span></span>
+                <span class="leaf">Applicant picks writing help: Full AI / Grammar only / None</span></li>
+              <li><span class="node jsx"><span class="label">SenderAnsweringScreen</span></span>
+                <span class="leaf">Applicant answers 2 MCQs — determines true expert status</span></li>
+              <li><span class="node jsx"><span class="label">SenderPitchingScreen</span></span>
+                <span class="leaf">Applicant writes pitch; optional AI improve / grammar buttons</span></li>
+              <li><span class="node jsx"><span class="label">RoundStart</span></span>
+                <span class="leaf">Evaluator sees the two questions before reading the pitch</span></li>
+              <li><span class="node jsx"><span class="label">EvaluateScreen</span></span>
+                <span class="leaf">Evaluator reads pitch + writing-help badge; clicks Hire / Pass</span></li>
+              <li><span class="node jsx"><span class="label">RevealScreen</span></span>
+                <span class="leaf">Shows outcome, correct answers, and payoffs for both players</span></li>
+              <li><span class="node jsx"><span class="label">GameOver</span></span>
+                <span class="leaf">Final scores + per-round history with payoff details</span></li>
+            </ul>
+          </li>
+
+          <li><span class="node jsx"><span class="label">Dashboard.jsx</span><span class="desc">Research dashboard (/#dashboard)</span></span>
+            <ul>
+              <li><span class="node jsx"><span class="label">DashboardGate</span></span>
+                <span class="leaf">Separate password (VITE_DASHBOARD_PASSWORD) before data is shown</span></li>
+              <li><span class="node jsx"><span class="label">Evaluator tab</span></span>
+                <ul>
+                  <li><span class="node jsx"><span class="label">Summary table</span></span>
+                    <span class="leaf">Human accuracy vs AI baseline, by writing help (all fields)</span></li>
+                  <li><span class="node jsx"><span class="label">Last 10 evaluators</span></span>
+                    <span class="leaf">Name, field, rounds, correct count, accuracy, timestamp</span></li>
+                  <li><span class="node jsx"><span class="label">FieldAccordion ×8</span></span>
+                    <span class="leaf">Per-field breakdown: N / Human accuracy / AI accuracy</span></li>
+                </ul>
+              </li>
+              <li><span class="node jsx"><span class="label">Applicant tab</span></span>
+                <ul>
+                  <li><span class="node jsx"><span class="label">Summary table</span></span>
+                    <span class="leaf">% hired (human) vs AI % hired (benchmark), by writing help</span></li>
+                  <li><span class="node jsx"><span class="label">Last 10 applicants</span></span>
+                    <span class="leaf">Name, field, writing help, rounds, % hired, timestamp</span></li>
+                  <li><span class="node jsx"><span class="label">FieldAccordionApplicant ×8</span></span>
+                    <span class="leaf">Per-field breakdown: N / % hired / AI % hired</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <li><span class="node js"><span class="label">questions.js</span><span class="desc">320 MCQs across 8 business fields</span></span>
+            <span class="leaf">40 questions × 8 fields (Strategy, HR, Finance, Accounting, Operations, Marketing, Sales, AI &amp; IS)<br>
+            Exports: QUESTIONS[], FIELDS[], getRandomQuestions(field, n, excludeIds)</span></li>
+
+          <li><span class="node js"><span class="label">openaiSender.js</span><span class="desc">OpenAI API wrappers</span></span>
+            <span class="leaf">generateSenderPitch · generateReceiverDecision · improvePitch · improveGrammar<br>
+            Model: gpt-4o-mini · temperature 0.7–0.85</span></li>
+
+          <li><span class="node js"><span class="label">supabase.js</span><span class="desc">Supabase client (null-safe)</span></span>
+            <span class="leaf">Reads VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY; exports null if unconfigured</span></li>
+
+          <li><span class="node json"><span class="label">simulated-applicants.json</span><span class="desc">480 pre-generated applicant pitches</span></span>
+            <span class="leaf">8 fields × 3 writing-help × 2 expert status × 10 applicants<br>
+            Fields: id, field, writingHelp, isExpert, questions[], pitch<br>
+            Generated by generate-applicants.mjs</span></li>
+
+        </ul>
+      </li>
+
+      <!-- Scripts -->
+      <li><span class="node mjs"><span class="label">generate-applicants.mjs</span><span class="desc">One-time data generation script</span></span>
+        <span class="leaf">Calls GPT-4o-mini to write 480 pitches (base → improve → grammar)<br>
+        Output → src/simulated-applicants.json</span></li>
+
+      <li><span class="node mjs"><span class="label">benchmark-receivers.mjs</span><span class="desc">AI evaluator baseline script</span></span>
+        <span class="leaf">Evaluates all 480 simulated applicants with same prompt as live game<br>
+        Output → benchmark-receivers.json · Overall accuracy: 46.7%</span></li>
+
+      <!-- Data -->
+      <li><span class="node json"><span class="label">benchmark-receivers.json</span><span class="desc">480 AI evaluation records (static baseline)</span></span>
+        <span class="leaf">Fields: applicantId, field, writingHelp, isExpert, aiDecision, correct, reasoning<br>
+        Bundled into Dashboard.jsx at build time for AI accuracy comparisons</span></li>
+
+      <!-- Config -->
+      <li><span class="node sql"><span class="label">schema.sql</span><span class="desc">Supabase table definitions</span></span>
+        <span class="leaf">receiver_decisions — one row per human evaluator round<br>
+        sender_rounds — one row per human applicant round<br>
+        RLS: anon insert + select policies on both tables</span></li>
+
+      <li><span class="node env"><span class="label">.env.local</span><span class="desc">Secrets (not committed)</span></span>
+        <span class="leaf">VITE_OPENAI_API_KEY · VITE_SUPABASE_URL · VITE_SUPABASE_ANON_KEY<br>
+        VITE_GAME_PASSWORD · VITE_DASHBOARD_PASSWORD</span></li>
+
+      <li><span class="node config"><span class="label">package.json</span></span>
+        <span class="leaf">react · openai · @supabase/supabase-js · tailwindcss · vite</span></li>
+
+    </ul>
+  </li>
+</ul>
+
+<!-- Data flows -->
+<div class="flows">
+  <h2>Data Flows</h2>
+  <div class="flow-row">
+    <span class="flow-from">Human evaluator decision</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-to">Supabase: receiver_decisions</span>
+    <span class="flow-desc">— session_id, username, field, applicant_writing_help, correct, payoffs</span>
+  </div>
+  <div class="flow-row">
+    <span class="flow-from">Human applicant pitch</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-to">Supabase: sender_rounds</span>
+    <span class="flow-desc">— session_id, username, field, writing_help, pitch, ai_decision, payoffs</span>
+  </div>
+  <div class="flow-row">
+    <span class="flow-from">AI evaluator on AI applicants</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-to">benchmark-receivers.json</span>
+    <span class="flow-desc">— static file, bundled at build time, used as 2×2 baseline in dashboard</span>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="dot" style="background:#4f46e5"></div> React component (.jsx)</div>
+  <div class="legend-item"><div class="dot" style="background:#0891b2"></div> JS module (.js)</div>
+  <div class="legend-item"><div class="dot" style="background:#059669"></div> JSON data (.json)</div>
+  <div class="legend-item"><div class="dot" style="background:#7c3aed"></div> Node script (.mjs)</div>
+  <div class="legend-item"><div class="dot" style="background:#b45309"></div> SQL schema (.sql)</div>
+  <div class="legend-item"><div class="dot" style="background:#dc2626"></div> Environment / secrets</div>
+</div>
+
+</body>
+</html>

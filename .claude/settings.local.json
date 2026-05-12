@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(powershell *)",
+      "Bash(npm run *)",
+      "Bash(python3 *)",
+      "Bash(node *)",
+      "Bash(npx vite *)",
+      "Bash(npm install *)",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\pablo\\\\PabloApps\\\\viewpoints\\\\AI_cheapens_talk\" -Filter \"*.mjs\" -Depth 0)",
+      "Bash(Select-Object Name)"
+    ]
+  }
+}
