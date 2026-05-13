@@ -5,7 +5,6 @@ import simulatedApplicants from './simulated-applicants.json'
 import { supabase } from './supabase'
 import { DashboardGate } from './Dashboard'
 
-const TOTAL_ROUNDS = 2
 const MAX_PITCH_CHARS = 400
 const GAME_PASSWORD = import.meta.env.VITE_GAME_PASSWORD || 'play2026'
 
@@ -31,7 +30,7 @@ function FieldBadge({ field }) {
   )
 }
 
-function Header({ scores, round, role }) {
+function Header({ scores, round, totalRounds, role }) {
   const youScore  = role === 'sender' ? scores.sender   : scores.receiver
   const theyScore = role === 'sender' ? scores.receiver : scores.sender
   const theyLabel = role === 'sender' ? 'AI Evaluator'  : 'AI Applicant'
@@ -39,7 +38,7 @@ function Header({ scores, round, role }) {
     <div className="flex items-center justify-between px-6 py-3 bg-slate-800 border-b border-slate-700">
       <span className="text-white font-semibold text-sm tracking-tight">Does AI Cheapen Talk?</span>
       <div className="flex items-center gap-5 text-sm">
-        <span className="text-slate-400">Round <strong className="text-white">{round}</strong>/{TOTAL_ROUNDS}</span>
+        <span className="text-slate-400">Round <strong className="text-white">{round}</strong>/{totalRounds}</span>
         <span className="text-slate-400">You: <strong className="text-sky-400">{youScore}</strong></span>
         <span className="text-slate-400">{theyLabel}: <strong className="text-rose-400">{theyScore}</strong></span>
       </div>
@@ -69,6 +68,7 @@ export default function App() {
   const [aiReasoning, setAiReasoning]     = useState('')
   const [evaluatorChoice, setEvalChoice]  = useState(null)
   const [lastPayoffs, setLastPayoffs]     = useState(null)
+  const [totalRounds, setTotalRounds]     = useState(2)
   const [scores, setScores]               = useState({ sender: 0, receiver: 0 })
   const [round, setRound]                 = useState(1)
   const [history, setHistory]             = useState([])
@@ -118,12 +118,13 @@ export default function App() {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  function handleRoleSelect(selectedRole, selectedField) {
+  function handleRoleSelect(selectedRole, selectedField, selectedRounds) {
     const field = selectedField === 'random'
       ? FIELDS[Math.floor(Math.random() * FIELDS.length)]
       : selectedField
     setRole(selectedRole)
     setCurrentField(field)
+    setTotalRounds(selectedRounds)
     if (selectedRole === 'sender') {
       const qs = getRandomQuestions(field, 2, [])
       setQuestions(qs)
@@ -220,7 +221,7 @@ export default function App() {
   }
 
   function handleNext() {
-    if (round >= TOTAL_ROUNDS) { setPhase('gameover'); return }
+    if (round >= totalRounds) { setPhase('gameover'); return }
     setRound(r => r + 1)
     if (role === 'sender') {
       const qs = getRandomQuestions(currentField, 2, usedIds)
@@ -308,7 +309,7 @@ export default function App() {
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
           <h2 className="text-2xl font-bold text-slate-900 mb-1">Game Over</h2>
-          <p className="text-slate-500 text-sm mb-6">{TOTAL_ROUNDS} rounds · {currentField}</p>
+          <p className="text-slate-500 text-sm mb-6">{totalRounds} rounds · {currentField}</p>
           <div className={`grid ${role === 'receiver' ? 'grid-cols-1' : 'grid-cols-2'} gap-4 mb-6`}>
             <div className="bg-sky-50 rounded-xl p-4 text-center border border-sky-100">
               <p className="text-3xl font-bold text-sky-600">{youScore}</p>
@@ -369,12 +370,12 @@ export default function App() {
   // ── Main game ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col">
-      <Header scores={scores} round={round} role={role} />
+      <Header scores={scores} round={round} totalRounds={totalRounds} role={role} />
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-8">
 
           {phase === 'round_start' && (
-            <RoundStart field={currentField} round={round} questions={questions} onStart={handleStartRound} error={error} />
+            <RoundStart field={currentField} round={round} totalRounds={totalRounds} questions={questions} onStart={handleStartRound} error={error} />
           )}
           {phase === 'thinking' && <LoadingScreen message="AI applicant is preparing their pitch…" />}
           {phase === 'evaluate' && (
@@ -409,7 +410,7 @@ export default function App() {
               evaluatorChoice={evaluatorChoice} aiDecision={aiDecision} aiReasoning={aiReasoning}
               questions={questions} answerAssessment={answerAssessment}
               payoffs={lastPayoffs} field={currentField}
-              onNext={handleNext} round={round}
+              onNext={handleNext} round={round} totalRounds={totalRounds}
             />
           )}
 
@@ -477,6 +478,9 @@ function RoleSelectScreen({ onStart }) {
   const [step, setStep] = useState('role')
   const [selectedRole, setSelectedRole] = useState(null)
   const [selectedField, setSelectedField] = useState('random')
+  const [selectedRounds, setSelectedRounds] = useState(2)
+
+  const roundOptions = [1, 2, 3, 4, 5, 6, 8, 10]
 
   const fieldOptions = [
     { value: 'random',                       label: 'Random' },
@@ -524,7 +528,7 @@ function RoleSelectScreen({ onStart }) {
     )
   }
 
-  return (
+  if (step === 'field') return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-8">
         <h1 className="text-2xl font-bold text-slate-900 mb-6">Does AI Cheapen Talk?</h1>
@@ -552,7 +556,45 @@ function RoleSelectScreen({ onStart }) {
             ← Back
           </button>
           <button
-            onClick={() => onStart(selectedRole, selectedField)}
+            onClick={() => setStep('rounds')}
+            className="flex-1 bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Continue →
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-8">
+        <h1 className="text-2xl font-bold text-slate-900 mb-6">Does AI Cheapen Talk?</h1>
+        <p className="text-sm font-medium text-slate-700 mb-3">How many rounds?</p>
+        <div className="grid grid-cols-4 gap-2 mb-6">
+          {roundOptions.map(n => (
+            <button
+              key={n}
+              onClick={() => setSelectedRounds(n)}
+              className={`py-2 rounded-lg text-sm font-semibold border transition-all ${
+                selectedRounds === n
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setStep('field')}
+            className="px-5 py-3 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
+          >
+            ← Back
+          </button>
+          <button
+            onClick={() => onStart(selectedRole, selectedField, selectedRounds)}
             className="flex-1 bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition-colors"
           >
             Start Game →
@@ -563,11 +605,11 @@ function RoleSelectScreen({ onStart }) {
   )
 }
 
-function RoundStart({ field, round, questions, onStart, error }) {
+function RoundStart({ field, round, totalRounds, questions, onStart, error }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Round {round} of {TOTAL_ROUNDS}</p>
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Round {round} of {totalRounds}</p>
         {field && <FieldBadge field={field} />}
       </div>
       <p className="text-sm text-slate-600 mb-3">The applicant was tested on these two questions — expertise means answering both correctly. Correct answers are revealed after your hiring decision.</p>
@@ -810,7 +852,7 @@ function SenderPitchingScreen({ questions, field, answerAssessment, senderType, 
   )
 }
 
-function RevealScreen({ role, senderType, evaluatorChoice, aiDecision, aiReasoning, questions, answerAssessment, payoffs, field, onNext, round }) {
+function RevealScreen({ role, senderType, evaluatorChoice, aiDecision, aiReasoning, questions, answerAssessment, payoffs, field, onNext, round, totalRounds }) {
   const isExpert = senderType === 'expert'
   const correct = payoffs?.correct
   const youPayoff = role === 'sender' ? payoffs?.senderPayoff : payoffs?.receiverPayoff
@@ -935,7 +977,7 @@ function RevealScreen({ role, senderType, evaluatorChoice, aiDecision, aiReasoni
       )}
 
       <button onClick={onNext} className="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition-colors">
-        {round >= TOTAL_ROUNDS ? 'See Final Results' : 'Next Round →'}
+        {round >= totalRounds ? 'See Final Results' : 'Next Round →'}
       </button>
     </div>
   )
