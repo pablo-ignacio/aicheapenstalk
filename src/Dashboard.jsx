@@ -23,13 +23,14 @@ for (const r of benchmarkRaw) {
   if (r.correct) bmLookup[r.field][r.writingHelp].correct++
 }
 
-// Pre-compute benchmark hired lookup: field → writingHelp → { n, hired }
+// Pre-compute benchmark hired lookup: field → writingHelp → { nExpert, hiredExpert, nNonExpert, hiredNonExpert }
 const bmHiredLookup = {}
 for (const r of benchmarkRaw) {
   bmHiredLookup[r.field] ??= {}
-  bmHiredLookup[r.field][r.writingHelp] ??= { n: 0, hired: 0 }
-  bmHiredLookup[r.field][r.writingHelp].n++
-  if (r.aiDecision === 'expert') bmHiredLookup[r.field][r.writingHelp].hired++
+  bmHiredLookup[r.field][r.writingHelp] ??= { nExpert: 0, hiredExpert: 0, nNonExpert: 0, hiredNonExpert: 0 }
+  const hired = r.aiDecision === 'expert'
+  if (r.isExpert) { bmHiredLookup[r.field][r.writingHelp].nExpert++; if (hired) bmHiredLookup[r.field][r.writingHelp].hiredExpert++ }
+  else            { bmHiredLookup[r.field][r.writingHelp].nNonExpert++; if (hired) bmHiredLookup[r.field][r.writingHelp].hiredNonExpert++ }
 }
 
 // ── Field accordion ────────────────────────────────────────────────────────────
@@ -88,7 +89,7 @@ function FieldAccordionApplicant({ field, srLookup }) {
   const [open, setOpen] = useState(false)
   const sr    = srLookup[field] ?? {}
   const bm    = bmHiredLookup[field] ?? {}
-  const totalN = HELP.reduce((s, h) => s + (sr[h]?.n ?? 0), 0)
+  const totalN = HELP.reduce((s, h) => s + (sr[h]?.nExpert ?? 0) + (sr[h]?.nNonExpert ?? 0), 0)
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
@@ -108,21 +109,25 @@ function FieldAccordionApplicant({ field, srLookup }) {
             <thead>
               <tr className="text-slate-400 uppercase tracking-wide">
                 <th className="text-left pb-2 pr-3 font-medium">Writing help</th>
-                <th className="text-center pb-2 pr-3 font-medium">N</th>
-                <th className="text-center pb-2 pr-3 font-medium">% hired</th>
-                <th className="text-center pb-2 font-medium">AI % hired</th>
+                <th className="text-center pb-2 pr-3 font-medium">N (exp/non)</th>
+                <th className="text-center pb-2 pr-3 font-medium">% expert hired</th>
+                <th className="text-center pb-2 pr-3 font-medium">% non-expert hired</th>
+                <th className="text-center pb-2 pr-3 font-medium">AI % expert hired</th>
+                <th className="text-center pb-2 font-medium">AI % non-expert hired</th>
               </tr>
             </thead>
             <tbody>
               {HELP.map(h => {
-                const human = sr[h] ?? { n: 0, hired: 0 }
-                const ai    = bm[h] ?? { n: 0, hired: 0 }
+                const human = sr[h] ?? { nExpert: 0, hiredExpert: 0, nNonExpert: 0, hiredNonExpert: 0 }
+                const ai    = bm[h] ?? { nExpert: 0, hiredExpert: 0, nNonExpert: 0, hiredNonExpert: 0 }
                 return (
                   <tr key={h} className="border-t border-slate-100">
                     <td className="py-1.5 pr-3 text-slate-700">{HELP_LABEL[h]}</td>
-                    <td className="py-1.5 pr-3 text-center text-slate-500">{human.n || '—'}</td>
-                    <td className="py-1.5 pr-3 text-center font-medium text-slate-800">{pct(human.hired, human.n)}</td>
-                    <td className="py-1.5 text-center font-medium text-slate-400">{pct(ai.hired, ai.n)}</td>
+                    <td className="py-1.5 pr-3 text-center text-slate-500">{human.nExpert || '—'}/{human.nNonExpert || '—'}</td>
+                    <td className="py-1.5 pr-3 text-center font-medium text-slate-800">{pct(human.hiredExpert, human.nExpert)}</td>
+                    <td className="py-1.5 pr-3 text-center font-medium text-slate-800">{pct(human.hiredNonExpert, human.nNonExpert)}</td>
+                    <td className="py-1.5 pr-3 text-center font-medium text-slate-400">{pct(ai.hiredExpert, ai.nExpert)}</td>
+                    <td className="py-1.5 text-center font-medium text-slate-400">{pct(ai.hiredNonExpert, ai.nNonExpert)}</td>
                   </tr>
                 )
               })}
@@ -239,14 +244,15 @@ function Dashboard({ onExit, onLogout }) {
   const rows   = rd.filter(inRange)
   const srRows = sr.filter(inRange)
 
-  // Build human applicant lookup: field → writingHelp → { n, hired }
+  // Build human applicant lookup: field → writingHelp → { nExpert, hiredExpert, nNonExpert, hiredNonExpert }
   const srLookup = {}
   for (const r of srRows) {
     srLookup[r.field] ??= {}
-    srLookup[r.field][r.writing_help] ??= { n: 0, hired: 0 }
-    srLookup[r.field][r.writing_help].n++
-    if (r.ai_decision === 'expert') srLookup[r.field][r.writing_help].hired++
-}
+    srLookup[r.field][r.writing_help] ??= { nExpert: 0, hiredExpert: 0, nNonExpert: 0, hiredNonExpert: 0 }
+    const hired = r.ai_decision === 'expert'
+    if (r.is_expert) { srLookup[r.field][r.writing_help].nExpert++;    if (hired) srLookup[r.field][r.writing_help].hiredExpert++ }
+    else             { srLookup[r.field][r.writing_help].nNonExpert++;  if (hired) srLookup[r.field][r.writing_help].hiredNonExpert++ }
+  }
 
   // Build human evaluator lookup: field → writingHelp → { n, correct }
   const hrLookup = {}
@@ -415,25 +421,30 @@ function Dashboard({ onExit, onLogout }) {
                 <thead>
                   <tr className="text-slate-400 uppercase tracking-wide">
                     <th className="text-left pb-2 pr-3 font-medium">Writing help</th>
-                    <th className="text-center pb-2 pr-3 font-medium">N</th>
-                    <th className="text-center pb-2 pr-3 font-medium">% hired</th>
-                    <th className="text-center pb-2 font-medium">AI % hired</th>
+                    <th className="text-center pb-2 pr-3 font-medium">N (exp/non)</th>
+                    <th className="text-center pb-2 pr-3 font-medium">% expert hired</th>
+                    <th className="text-center pb-2 pr-3 font-medium">% non-expert hired</th>
+                    <th className="text-center pb-2 pr-3 font-medium">AI % expert hired</th>
+                    <th className="text-center pb-2 font-medium">AI % non-expert hired</th>
                   </tr>
                 </thead>
                 <tbody>
                   {HELP.map(h => {
-                    const sub   = srRows.filter(r => r.writing_help === h)
-                    const hired = sub.filter(r => r.ai_decision === 'expert').length
+                    const sub        = srRows.filter(r => r.writing_help === h)
+                    const experts    = sub.filter(r => r.is_expert)
+                    const nonExperts = sub.filter(r => !r.is_expert)
                     const aiAll = FIELDS.reduce((acc, f) => {
-                      const bm = bmHiredLookup[f]?.[h] ?? { n: 0, hired: 0 }
-                      return { n: acc.n + bm.n, hired: acc.hired + bm.hired }
-                    }, { n: 0, hired: 0 })
+                      const bm = bmHiredLookup[f]?.[h] ?? { nExpert: 0, hiredExpert: 0, nNonExpert: 0, hiredNonExpert: 0 }
+                      return { nExpert: acc.nExpert + bm.nExpert, hiredExpert: acc.hiredExpert + bm.hiredExpert, nNonExpert: acc.nNonExpert + bm.nNonExpert, hiredNonExpert: acc.hiredNonExpert + bm.hiredNonExpert }
+                    }, { nExpert: 0, hiredExpert: 0, nNonExpert: 0, hiredNonExpert: 0 })
                     return (
                       <tr key={h} className="border-t border-slate-100">
                         <td className="py-1.5 pr-3 text-slate-700 font-medium">{HELP_LABEL[h]}</td>
-                        <td className="py-1.5 pr-3 text-center text-slate-500">{sub.length || '—'}</td>
-                        <td className="py-1.5 pr-3 text-center font-semibold text-slate-800">{pct(hired, sub.length)}</td>
-                        <td className="py-1.5 text-center font-medium text-slate-400">{pct(aiAll.hired, aiAll.n)}</td>
+                        <td className="py-1.5 pr-3 text-center text-slate-500">{experts.length || '—'}/{nonExperts.length || '—'}</td>
+                        <td className="py-1.5 pr-3 text-center font-semibold text-slate-800">{pct(experts.filter(r => r.ai_decision === 'expert').length, experts.length)}</td>
+                        <td className="py-1.5 pr-3 text-center font-semibold text-slate-800">{pct(nonExperts.filter(r => r.ai_decision === 'expert').length, nonExperts.length)}</td>
+                        <td className="py-1.5 pr-3 text-center font-medium text-slate-400">{pct(aiAll.hiredExpert, aiAll.nExpert)}</td>
+                        <td className="py-1.5 text-center font-medium text-slate-400">{pct(aiAll.hiredNonExpert, aiAll.nNonExpert)}</td>
                       </tr>
                     )
                   })}
