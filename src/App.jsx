@@ -49,7 +49,7 @@ function Header({ scores, round, totalRounds, role }) {
 export default function App() {
   const [isDashboard, setIsDashboard]      = useState(() => window.location.hash === '#dashboard')
   const [username, setUsername]            = useState(null)
-  const [sessionId]                        = useState(() => crypto.randomUUID())
+  const [sessionId, setSessionId]          = useState(() => crypto.randomUUID())
   const [phase, setPhase]                 = useState('role_select')
   const [role, setRole]                   = useState(null)
   const [currentField, setCurrentField]   = useState(null)
@@ -241,6 +241,7 @@ export default function App() {
   }
 
   function handleRestart() {
+    setSessionId(crypto.randomUUID())
     setScores({ sender: 0, receiver: 0 })
     setRound(1)
     setHistory([])
