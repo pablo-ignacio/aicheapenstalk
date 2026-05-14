@@ -73,6 +73,25 @@ export default function App() {
   const [round, setRound]                 = useState(1)
   const [history, setHistory]             = useState([])
   const [error, setError]                 = useState('')
+  const [humanApplicants, setHumanApplicants] = useState([])
+
+  useEffect(() => {
+    if (!username || !supabase) return
+    supabase.from('sender_rounds').select('*').then(({ data, error }) => {
+      if (error || !data) return
+      const converted = data
+        .filter(r => r.pitch && r.question_ids?.length && r.username !== username)
+        .map(r => ({
+          id: `human_${r.session_id}_${r.round}`,
+          field: r.field,
+          isExpert: r.is_expert,
+          questions: r.question_ids,
+          pitch: r.pitch,
+          writingHelp: r.writing_help,
+        }))
+      setHumanApplicants(converted)
+    })
+  }, [username])
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -86,7 +105,7 @@ export default function App() {
   }
 
   function drawApplicant(field, excludeIds) {
-    const pool = simulatedApplicants.filter(a => a.field === field && !excludeIds.includes(a.id))
+    const pool = [...simulatedApplicants, ...humanApplicants].filter(a => a.field === field && !excludeIds.includes(a.id))
     if (!pool.length) return null
     return pool[Math.floor(Math.random() * pool.length)]
   }
