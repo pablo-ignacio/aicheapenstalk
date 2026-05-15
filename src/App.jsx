@@ -383,8 +383,8 @@ export default function App() {
             Log out
           </button>
         </div>
+        <Copyright />
       </div>
-      <Copyright />
     )
   }
 
