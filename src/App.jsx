@@ -327,7 +327,7 @@ export default function App() {
     const theyLabel = role === 'sender' ? 'AI Evaluator' : 'Applicant'
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 mb-6">
           <h2 className="text-2xl font-bold text-slate-900 mb-1">Game Over</h2>
           <p className="text-slate-500 text-sm mb-6">{totalRounds} rounds · {currentField}</p>
           <div className={`grid ${role === 'receiver' ? 'grid-cols-1' : 'grid-cols-2'} gap-4 mb-6`}>
@@ -384,6 +384,7 @@ export default function App() {
           </button>
         </div>
       </div>
+      <Copyright />
     )
   }
 
@@ -391,7 +392,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col">
       <Header scores={scores} round={round} totalRounds={totalRounds} role={role} />
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-1 flex items-center justify-center p-4 pb-8">
         <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-8">
 
           {phase === 'round_start' && (
@@ -436,11 +437,20 @@ export default function App() {
 
         </div>
       </div>
+      <Copyright />
     </div>
   )
 }
 
 // ── Screen components ─────────────────────────────────────────────────────────
+
+function Copyright() {
+  return (
+    <p className="fixed bottom-0 inset-x-0 text-center text-xs text-slate-500 py-2 pointer-events-none select-none">
+      © Pablo Hernandez Lagos, 2026
+    </p>
+  )
+}
 
 function LoginScreen({ onLogin }) {
   const [usernameInput, setUsernameInput] = useState('')
@@ -490,6 +500,7 @@ function LoginScreen({ onLogin }) {
           By participating you agree that your written pitch will be evaluated by OpenAI's API, and that your name and game outcomes will be stored for research purposes only. No other data leaves your device.
         </p>
       </div>
+      <Copyright />
     </div>
   )
 }
@@ -544,9 +555,11 @@ function RoleSelectScreen({ onStart }) {
             Continue →
           </button>
         </div>
+        <Copyright />
       </div>
     )
   }
+
 
   if (step === 'field') return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
@@ -583,6 +596,7 @@ function RoleSelectScreen({ onStart }) {
           </button>
         </div>
       </div>
+      <Copyright />
     </div>
   )
 
@@ -621,6 +635,7 @@ function RoleSelectScreen({ onStart }) {
           </button>
         </div>
       </div>
+      <Copyright />
     </div>
   )
 }

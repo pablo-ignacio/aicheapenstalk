@@ -141,6 +141,14 @@ function FieldAccordionApplicant({ field, srLookup }) {
 
 // ── Password gate ──────────────────────────────────────────────────────────────
 
+function Copyright() {
+  return (
+    <p className="fixed bottom-0 inset-x-0 text-center text-xs text-slate-500 py-2 pointer-events-none select-none">
+      © Pablo Hernandez Lagos, 2026
+    </p>
+  )
+}
+
 export function DashboardGate({ onExit, onLogout }) {
   const [input, setInput]     = useState('')
   const [unlocked, setUnlock] = useState(false)
@@ -178,6 +186,7 @@ export function DashboardGate({ onExit, onLogout }) {
           </button>
         </div>
       </div>
+      <Copyright />
     </div>
   )
 }
@@ -499,6 +508,7 @@ function Dashboard({ onExit, onLogout }) {
           AI accuracy from benchmark run 2026-05-07 · Human data live
         </p>
       </div>
+      <Copyright />
     </div>
   )
 }
